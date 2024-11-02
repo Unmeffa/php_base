@@ -1,0 +1,207 @@
+ErrorDocument 404 /erreur404-01
+RewriteEngine on
+RewriteCond %{SERVER_PORT} 80
+Options +FollowSymlinks
+SetEnv REGISTER_GLOBALS 0
+SetEnv SESSION_USE_TRANS_SID 0
+
+### Redirection protocole http vers https si ssl activé ----------------------------------------------------------------------------------------###
+#RewriteCond %{HTTPS} off
+#RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1  [R=301,L]
+#RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+### decommenter a la mise en ligne------------------------------------------------------------------------------------------------------------------###
+
+### Redirection du contenu en non www vers www a decommenter a la mise en ligne---------------------------------------------------------------------###
+RewriteCond %{HTTP_HOST} !^www\.
+RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
+### decommenter a la mise en ligne------------------------------------------------------------------------------------------------------------------###
+
+RewriteRule ^.*-([0-9]+)/.*-([0-9]+)$ sejour.php?id=$1&id_sejour=$2&sejour=1 [NC,QSA,L]
+RewriteRule ^.*-([0-9]+)$ index.php?id=$1 [NC,QSA,L]
+
+# MOD_DEFLATE COMPRESSION
+SetOutputFilter DEFLATE
+AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/x-javascript application/x-httpd-php
+
+#Pour les navigateurs incompatibles
+BrowserMatch ^Mozilla/4 gzip-only-text/html
+BrowserMatch ^Mozilla/4\.0[678] no-gzip
+BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+BrowserMatch \bMSI[E] !no-gzip !gzip-only-text/html
+#ne pas mettre en cache si ces fichiers le sont déjà
+
+SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png)$ no-gzip
+
+#les proxies doivent donner le bon contenu
+
+Header append Vary User-Agent env=!dont-vary
+
+#Activation de GZIP
+
+# Commenter la ligne ci-dessous si plantage
+
+# php_flag zlib.output_compression on
+
+# Activer le filtre
+
+SetOutputFilter DEFLATE
+
+# Certains navigateurs ne peuvent pas avoir GZIP (les vieux)
+
+BrowserMatch ^Mozilla/4 gzip-only-text/html
+
+# Certains navigateurs ne peuvent pas avoir GZIP (les vieux)
+
+BrowserMatch ^Mozilla/4\.0678 no-gzip
+
+# On ne veut pas d'IE
+
+BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+
+# On ne compresse pas les images, elles le sont déjà.
+
+SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png)$ no-gzip dont-vary
+
+#on gère le cas des proxy
+
+Header append Vary User-Agent env=!dont-vary
+
+#Activation de GZIP
+
+<IfModule mod_expires.c>
+ExpiresActive on
+ExpiresDefault "access plus 1 month"
+ExpiresByType image/x-icon "access plus 1 year"
+ExpiresByType image/gif "access plus 1 month"
+ExpiresByType image/png "access plus 1 month"
+ExpiresByType image/jpg "access plus 1 month"
+ExpiresByType image/jpeg "access plus 1 month"
+ExpiresByType video/mp4 "access plus 1 month"
+ExpiresByType text/x-component "access plus 1 month"
+ExpiresByType font/truetype "access plus 1 month"
+ExpiresByType font/opentype "access plus 1 month"
+ExpiresByType application/x-font-woff "access plus 1 month"
+ExpiresByType application/vnd.ms-fontobject "access plus 1 month"
+ExpiresByType text/css "access plus 1 year"
+ExpiresByType application/javascript "access plus 1 year"
+ExpiresByType text/javascript "access plus 1 year"
+ExpiresByType text/js "access plus 1 year"
+ExpiresByType application/x-javascript "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+<FilesMatch "\\.(ico|jpe?g|png|gif|swf|gz|ttf)$">
+Header set Cache-Control "max-age=2592000, public"
+</FilesMatch>
+<FilesMatch "\\.(css)$">
+Header set Cache-Control "max-age=2592000, public"
+</FilesMatch>
+<FilesMatch "\\.(js)$">
+Header set Cache-Control "max-age=2592000, private"
+</FilesMatch>
+<filesMatch "\\.(html|htm)$">
+Header set Cache-Control "max-age=7200, public"
+</filesMatch>
+# Disable caching for scripts and other dynamic files
+<FilesMatch "\.(pl|php|cgi|spl|scgi|fcgi)$">
+Header unset Cache-Control
+</FilesMatch>
+</IfModule>
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+#remove PHPSESSID
+RewriteCond %{QUERY_STRING} PHPSESSID=.*$
+RewriteRule .* %{REQUEST_URI}? [R=301,L]
+</IfModule>
+
+<Files .htaccess>
+order allow,deny
+deny from all
+</Files>
+
+<Files ~ "\.(inc|class|sql|ini|conf|exe|dll|bin|tpl|bkp|dat|c|h|py|spd|theme|module)$">
+deny from all
+</Files>
+
+DirectoryIndex index.php
+
+<Files ~ "^(index)\.(p?s?x?htm?|txt|aspx?|cfml?|cgi|pl|php[3-9]|jsp|xml)$">
+order allow,deny
+deny from all
+</Files>
+
+### FILTRE CONTRE ROBOTS DES PIRATES ET ASPIRATEURS DE SITE WEB
+
+### LISTE ICI: <http://www.bg-pro.com/?goto=badbot>
+
+<IfModule mod_rewrite.c>
+
+## EXCEPTION: TOUS LES ROBOTS MEMES ANONYMES OU BANNIS PEUVENT ACCEDER A CES FICHIERS
+
+RewriteCond %{REQUEST_URI} !^/robots.txt
+RewriteCond %{REQUEST_URI} !^/sitemap.xml
+
+## EXCEPTION: SI UTILISATION DE *PAYPAL INSTANT NOTIFICATION PAYMENT*, COMME PAYPAL N'UTILISE PAS DE HTTP_USER_AGENT, L'IPN NE MARCHERA PAS.
+
+RewriteCond %{REQUEST_URI} !^/paypal-ipn.php
+
+##
+
+RewriteCond %{HTTP_USER_AGENT} ^-?$ [OR] ## ANONYMES
+RewriteCond %{HTTP_USER_AGENT} ^[bcdfghjklmnpqrstvwxz\ ]{8,}|^[0-9a-z]{15,}|^[0-9A-Za-z]{19,}|^[A-Za-z]{3,}\ [a-z]{4,}\ [a-z]{4,} [OR]
+## CEUX QUI INVENTENT DES NOMS AU HASARD
+
+RewriteCond %{HTTP_USER_AGENT} ^<sc|<\?|8484\ Boston\ Project|autoemailspider|@nonymouse|ADSARobot|Advanced\ Email\ Extractor|^adwords|ah-ha|aktuelles|amzn\_assoc|Anarchie|anonymous|Art-Online|ASPSeek|ASSORT|ATHENS|Atomz|attach|autoemailspider|BackWeb|Bandit|BatchFTP|bdfetch|big.brother|BlackWidow|blogsearchbot-martin|bmclient|Boston\ Project|BravoBrian\ SpiderEngine\ MarcoPolo|Bullseye|bumblebee|capture|CherryPicker|ChinaClaw|CICC|clipping|compatible\ \;|Crescent|Crescent\ Internet|Custo|cyberalert|Deweb|diagem|Digger|Digimarc|DIIbot|DirectUpdate|disco|DISCoFinder|Downloader|Download\ Accelerator|Download\ Demon|Download\ Wonder|Drip|DSurf15a|DTS.Agent|EasyDL|ecatch|echo\ extense|ecollector|efp@gmx\.net|EirGrabber|EmailCollector|EmailSiphon|Email\ Siphon|EmailWolf|Email\ Extractor|Express\ WebPictures|ExtractorPro [NC,OR]
+## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+
+
+RewriteCond %{HTTP_USER_AGENT} EyeNetIE|fastlwspider|FavOrg|Favorites\ Sweeper|^Fetch|FEZhead|FileHound|flashget|FlashGet\ WebWasher|FlickBot|fluffy|frontpage|GalaxyBot|Generic|Getleft|GetRight|GetSmart|GetWeb!|GetWebPage|gigabaz|Girafabot|Go!Zilla|go-ahead-got-it|GornKer|Grabber|GrabNet|Grafula|Green\ Research|grub-client|grub\ crawler|hanzoweb|Harvest|hhjhj@yahoo|hloader|HMView|HomePageSearch|HTTPConnect|httpdown|httplib|HttpProxy|HTTP\ agent|http\ generic|HTTrack|ia_archive|IBM_Planetwide|IDBot|id-search|imagefetch|Image\ Stripper|Image\ Sucker|IncyWincy|Indy\ Library|informant|Ingelin|InterGET|InternetLinkAgent|InternetSeer\.com|^Internet\ Explorer|Internet\ Ninja|IPiumBot|Iria|Irvine|Jakarta\ Commons|JBH*Agent [NC,OR] ## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+RewriteCond %{HTTP_USER_AGENT} JetCar|JOC|JOC\ Web\ Spider|JustView|Kapere|KWebGet|Lachesis|larbin|LeechFTP|LexiBot|lftp|likse|Link*Sleuth|LINKS\ ARoMATIZED|LinkWalker|Mac\ Finder|Mag-Net|Magnet|Mass\ Downloader|MCspider|Microsoft\ URL|Microsoft\ Data|MIDown\ tool|minibot\(NaverRobot\)|Mirror|Missigua|Mister\ PiX|MJ12bot|MMMtoCrawl\/UrlDispatcherLLL|Movable\ Type|Moozilla|^Mozilla$|^MSIE|Murzillo|MSProxy|multithreaddb|nationaldirectory|Navroad|NearSite|NetAnts|NetCarta|NetMechanic|netprospector|NetResearchServer|NetSpider|NetZIP|NetZippy|NetZip\ Downloader|Net\ Vampire|NEWT|nicerspro|NICErsPRO|NPBot|Nutch|Nutscrape/|Octopus|Offline\ Explorer|Offline\ Navigator|OmniExplorer|OpaL|Openfind|OpenTextSiteCrawler [NC,OR] ## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+RewriteCond %{HTTP_USER_AGENT} OrangeBot|PackRat|PageGrabber|Papa\ Foto|pavuk|pcBrowser|PersonaPilot|PingALink|Pockey|Program\ Shareware|Proxy|psbot|PSurf|psycheclone|^puf|Pump|PushSite|PussyCat|PycURL|python|QRVA|QuepasaCreep|RealDownload|Reaper|Recorder|ReGet|replacer|RepoMonkey|almaden|Robozilla|Rover|RPT-HTTPClient|Rsync|SearchExpress|searchhippo|searchterms\.it|Second\ Street\ Research|Seeker|Shai|sitecheck|SiteMapper|SiteSnagger|SlySearch|SmartDownload|snagger|SpaceBison|Spegla|SpiderBot|SqWorm|Star\ Downloader|Stripper|sucker|SuperBot|SuperHTTP|Surfbot|SurfWalker|SurveyBot|Szukacz|tAkeOut|tarspider|Teleport\ Pro|Telesoft|Templeton|TrackBack|TrueRobot|Turing|TurnitinBot [NC,OR] ## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+RewriteCond %{HTTP_USER_AGENT} TV33_Mercator|UIowaCrawler|URL_Spider_Pro|^user|^User\ Agent:\ |^User-Agent:\ |UtilMind|Vacuum|vagabondo|vayala|visibilitygap|vobsub|VoidEYE|vspider|w3mir|WebaltBot|WebAuto|webbandit|WebCapture|Webclipping|webcollage|webcollector|WebCopier|webcraft@bea|WebDAV|webdevil|webdownloader|Webdup|WebEmailExtractor|WebFetch|WebGo\ IS|WebHook|Webinator|WebLeacher|WEBMASTERS|WebMiner|WebMirror|webmole|WebReaper|WebSauger|WEBsaver|Website\ eXtractor|Website\ Quester|WebSnake|Webster|WebStripper|websucker|webvac|webwalk|webweasel|WebWhacker|WebZIP|Web\ Data\ Extractor|Web\ Downloader|Web\ Image\ Collector|Web\ Sucker|web\.by\.mail|whizbang|WhosTalking|Widow|Widows|WISEbot|WISEnutbot|WUMPUS|Wweb|WWWOFFLE|Wysigot|x-Tractor|Xaldon\ WebSpider|XGET|Yandex|Zeus|Zeus.*Webster [NC] ## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+RewriteCond %{HTTP_USER_AGENT} ^curl|^Fetch\ API\ Request|GT\:\:WWW|^HTTP\:\:Lite|httplib|^Java/1.|^Java\ 1.|^LWP|libWeb|libwww|^PEAR|PECL\:\:HTTP|PHPCrawl|^Program\ Shareware|python|Rsync|Snoopy|^URI\:\:Fetch|WebDAV|^Wget [NC] ## BIBLIOTHEQUES / CLASSES HTTP DONT ON NE VEUT PAS. ATTENTION, CELA PEUT BLOQUER CERTAINES FONCTIONS DE VOTRE CMS. NE PAS TOUT EFFACER, MAIS CHERCHEZ LE NOM DE LA CLASSE HTTP CONCERNEE (DEMANDEZ AUX DEVELOPPEURS DE VOTRE CMS). CETTE LISTE BLOQUE 80% DES ROBOTS SPAMMEURS. IL FAUT LA CONSERVER.
+RewriteRule (.*) - [F]
+
+### FILTRE CONTRE ROBOTS DES PIRATES ET ASPIRATEURS DE SITE WEB
+
+### LISTE ICI: <http://www.bg-pro.com/?goto=badbot>
+
+<IfModule mod_rewrite.c>
+
+## EXCEPTION: TOUS LES ROBOTS MEMES ANONYMES OU BANNIS PEUVENT ACCEDER A CES FICHIERS
+
+RewriteCond %{REQUEST_URI} !^/robots.txt
+RewriteCond %{REQUEST_URI} !^/sitemap.xml
+
+## EXCEPTION: SI UTILISATION DE *PAYPAL INSTANT NOTIFICATION PAYMENT*, COMME PAYPAL N'UTILISE PAS DE HTTP_USER_AGENT, L'IPN NE MARCHERA PAS.
+
+RewriteCond %{REQUEST_URI} !^/paypal-ipn.php
+
+##
+
+RewriteCond %{HTTP_USER_AGENT} ^-?$ [OR] ## ANONYMES
+RewriteCond %{HTTP_USER_AGENT} ^[bcdfghjklmnpqrstvwxz\ ]{8,}|^[0-9a-z]{15,}|^[0-9A-Za-z]{19,}|^[A-Za-z]{3,}\ [a-z]{4,}\ [a-z]{4,} [OR]
+
+## CEUX QUI INVENTENT DES NOMS AU HASARD
+
+RewriteCond %{HTTP_USER_AGENT} ^<sc|<\?|8484\ Boston\ Project|autoemailspider|@nonymouse|ADSARobot|Advanced\ Email\ Extractor|^adwords|ah-ha|aktuelles|amzn\_assoc|Anarchie|anonymous|Art-Online|ASPSeek|ASSORT|ATHENS|Atomz|attach|autoemailspider|BackWeb|Bandit|BatchFTP|bdfetch|big.brother|BlackWidow|blogsearchbot-martin|bmclient|Boston\ Project|BravoBrian\ SpiderEngine\ MarcoPolo|Bullseye|bumblebee|capture|CherryPicker|ChinaClaw|CICC|clipping|compatible\ \;|Crescent|Crescent\ Internet|Custo|cyberalert|Deweb|diagem|Digger|Digimarc|DIIbot|DirectUpdate|disco|DISCoFinder|Downloader|Download\ Accelerator|Download\ Demon|Download\ Wonder|Drip|DSurf15a|DTS.Agent|EasyDL|ecatch|echo\ extense|ecollector|efp@gmx\.net|EirGrabber|EmailCollector|EmailSiphon|Email\ Siphon|EmailWolf|Email\ Extractor|Express\ WebPictures|ExtractorPro [NC,OR]
+## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+
+RewriteCond %{HTTP_USER_AGENT} EyeNetIE|fastlwspider|FavOrg|Favorites\ Sweeper|^Fetch|FEZhead|FileHound|flashget|FlashGet\ WebWasher|FlickBot|fluffy|frontpage|GalaxyBot|Generic|Getleft|GetRight|GetSmart|GetWeb!|GetWebPage|gigabaz|Girafabot|Go!Zilla|go-ahead-got-it|GornKer|Grabber|GrabNet|Grafula|Green\ Research|grub-client|grub\ crawler|hanzoweb|Harvest|hhjhj@yahoo|hloader|HMView|HomePageSearch|HTTPConnect|httpdown|httplib|HttpProxy|HTTP\ agent|http\ generic|HTTrack|ia\_archive|IBM\_Planetwide|IDBot|id-search|imagefetch|Image\ Stripper|Image\ Sucker|IncyWincy|Indy\ Library|informant|Ingelin|InterGET|InternetLinkAgent|InternetSeer\.com|^Internet\ Explorer|Internet\ Ninja|IPiumBot|Iria|Irvine|Jakarta\ Commons|JBH*Agent [NC,OR]
+
+## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+RewriteCond %{HTTP_USER_AGENT} JetCar|JOC|JOC\ Web\ Spider|JustView|Kapere|KWebGet|Lachesis|larbin|LeechFTP|LexiBot|lftp|likse|Link*Sleuth|LINKS\ ARoMATIZED|LinkWalker|Mac\ Finder|Mag-Net|Magnet|Mass\ Downloader|MCspider|Microsoft\ URL|Microsoft\ Data|MIDown\ tool|minibot\(NaverRobot\)|Mirror|Missigua|Mister\ PiX|MJ12bot|MMMtoCrawl\/UrlDispatcherLLL|Movable\ Type|Moozilla|^Mozilla$|^MSIE|Murzillo|MSProxy|multithreaddb|nationaldirectory|Navroad|NearSite|NetAnts|NetCarta|NetMechanic|netprospector|NetResearchServer|NetSpider|NetZIP|NetZippy|NetZip\ Downloader|Net\ Vampire|NEWT|nicerspro|NICErsPRO|NPBot|Nutch|Nutscrape/|Octopus|Offline\ Explorer|Offline\ Navigator|OmniExplorer|OpaL|Openfind|OpenTextSiteCrawler [NC,OR]
+
+## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+RewriteCond %{HTTP_USER_AGENT} OrangeBot|PackRat|PageGrabber|Papa\ Foto|pavuk|pcBrowser|PersonaPilot|PingALink|Pockey|Program\ Shareware|Proxy|psbot|PSurf|psycheclone|^puf|Pump|PushSite|PussyCat|PycURL|python|QRVA|QuepasaCreep|RealDownload|Reaper|Recorder|ReGet|replacer|RepoMonkey|almaden|Robozilla|Rover|RPT-HTTPClient|Rsync|SearchExpress|searchhippo|searchterms\.it|Second\ Street\ Research|Seeker|Shai|sitecheck|SiteMapper|SiteSnagger|SlySearch|SmartDownload|snagger|SpaceBison|Spegla|SpiderBot|SqWorm|Star\ Downloader|Stripper|sucker|SuperBot|SuperHTTP|Surfbot|SurfWalker|SurveyBot|Szukacz|tAkeOut|tarspider|Teleport\ Pro|Telesoft|Templeton|TrackBack|TrueRobot|Turing|TurnitinBot [NC,OR]
+
+## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+RewriteCond %{HTTP_USER_AGENT} TV33\_Mercator|UIowaCrawler|URL\_Spider\_Pro|^user|^User\ Agent:\ |^User-Agent:\ |UtilMind|Vacuum|vagabondo|vayala|visibilitygap|vobsub|VoidEYE|vspider|w3mir|WebaltBot|WebAuto|webbandit|WebCapture|Webclipping|webcollage|webcollector|WebCopier|webcraft@bea|WebDAV|webdevil|webdownloader|Webdup|WebEmailExtractor|WebFetch|WebGo\ IS|WebHook|Webinator|WebLeacher|WEBMASTERS|WebMiner|WebMirror|webmole|WebReaper|WebSauger|WEBsaver|Website\ eXtractor|Website\ Quester|WebSnake|Webster|WebStripper|websucker|webvac|webwalk|webweasel|WebWhacker|WebZIP|Web\ Data\ Extractor|Web\ Downloader|Web\ Image\ Collector|Web\ Sucker|web\.by\.mail|whizbang|WhosTalking|Widow|Widows|WISEbot|WISEnutbot|WUMPUS|Wweb|WWWOFFLE|Wysigot|x-Tractor|Xaldon\ WebSpider|XGET|Yandex|Zeus|Zeus.*Webster [NC]
+
+## VRAIS ET FAUX ROBOTS NE RESPECTANT PAS LES REGLES
+RewriteCond %{HTTP_USER_AGENT} ^curl|^Fetch\ API\ Request|GT\:\:WWW|^HTTP\:\:Lite|httplib|^Java/1.|^Java\ 1.|^LWP|libWeb|libwww|^PEAR|PECL\:\:HTTP|PHPCrawl|^Program\ Shareware|python|Rsync|Snoopy|^URI\:\:Fetch|WebDAV|^Wget [NC] ## BIBLIOTHEQUES / CLASSES HTTP DONT ON NE VEUT PAS. ATTENTION, CELA PEUT BLOQUER CERTAINES FONCTIONS DE VOTRE CMS. NE PAS TOUT EFFACER, MAIS CHERCHEZ LE NOM DE LA CLASSE HTTP CONCERNEE (DEMANDEZ AUX DEVELOPPEURS DE VOTRE CMS). CETTE LISTE BLOQUE 80% DES ROBOTS SPAMMEURS. IL FAUT LA CONSERVER.
+RewriteRule (.*) - [F]
+
+</IfModule>

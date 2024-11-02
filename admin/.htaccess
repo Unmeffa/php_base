@@ -1,0 +1,12 @@
+# Désactiver l'affichage des répertoires
+Options -Indexes
+
+# Activer la réécriture d'URL
+RewriteEngine On
+
+# Vérifier si le fichier ou le dossier existe
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Rediriger les requêtes vers redirect.php avec l'URL demandée, sans spécifier de domaine
+RewriteRule ^(.*)$ redirect.php?url=$1 [QSA,L]
